@@ -1,0 +1,40 @@
+spring:
+  shardingsphere:
+    datasource:
+      names: master_0
+      master_0:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: org.postgresql.Driver
+        jdbc-url: jdbc:postgresql://localhost:5432/shard_demo
+        username: postgres
+        password: postgres
+    rules:
+      sharding:
+        tables:
+          orders:
+            actual-data-nodes: master_0.orders_${0..3}
+            table-strategy:
+              standard:
+                sharding-column: tenant_id
+                sharding-algorithm-name: tenant_algo
+        sharding-algorithms:
+          tenant_algo:
+            type: CLASS_BASED
+            props:
+              strategy: standard
+              algorithmClassName: com.example.sharding.sharding.TenantSharding
+  redis:
+    host: localhost
+    port: 6379
+  jackson:
+    default-property-inclusion: non_null
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/shard_demo
+    username: postgres
+    password: postgres
+
+# Logging
+logging:
+  level:
+    root: INFO
