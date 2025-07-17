@@ -1,36 +1,77 @@
 package org.example.simple_sharding.sharding;
 
 import org.apache.shardingsphere.sharding.api.sharding.standard.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
-public class TenantSharding implements StandardShardingAlgorithm<Comparable<Object>>
-{
-    @Autowired
+public class TenantSharding implements StandardShardingAlgorithm<Long>, ApplicationContextAware {
+
+    private static ApplicationContext applicationContext;
     private TenantTableService tableService;
 
     @Override
-    public String doSharding(Collection<String> availableTargetNames, PreciseShardingValue<Comparable<Object>> shardingValue) {
-        String tenantId = shardingValue.getValue().toString();
-        String logicTable = shardingValue.getLogicTableName();
-        String actualTable = tableService.getTableName(tenantId, logicTable);
+    public void setApplicationContext(ApplicationContext context) throws BeansException {
+        TenantSharding.applicationContext = context;
+    }
 
-        return availableTargetNames.stream()
-                .filter(actualTable::equals)
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No matching table"));
+    private TenantTableService getTableService() {
+        if (tableService == null) {
+            tableService = applicationContext.getBean(TenantTableService.class);
+        }
+        return tableService;
     }
 
     @Override
-    public Collection<String> doSharding(Collection<String> collection, RangeShardingValue<Comparable<Object>> rangeShardingValue) {
-        return List.of();
+    public String doSharding(Collection<String> availableTargetNames, PreciseShardingValue<Long> shardingValue) {
+        Long tenantId = shardingValue.getValue();
+        String logicTable = shardingValue.getLogicTableName();
+
+        try {
+            String actualTable = getTableService().getTableName(tenantId, logicTable);
+
+            return availableTargetNames.stream()
+                    .filter(actualTable::equals)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "No matching table found for tenant_id: " + tenantId +
+                                    ", expected table: " + actualTable +
+                                    ", available tables: " + availableTargetNames));
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to determine sharding table for tenant_id: " + tenantId +
+                    ", logic table: " + logicTable, e);
+        }
     }
 
-    @Override public String getType() { return "TENANT_CLASS"; }
-    @Override public void init(java.util.Properties props) {}
-    @Override public java.util.Properties getProps() { return new java.util.Properties(); }
+    @Override
+    public Collection<String> doSharding(Collection<String> availableTargetNames, RangeShardingValue<Long> rangeShardingValue) {
+        String logicTable = rangeShardingValue.getLogicTableName();
+
+        // Filter chỉ những tables liên quan đến logic table này
+        return availableTargetNames.stream()
+                .filter(tableName -> tableName.startsWith(logicTable + "_"))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public String getType() {
+        return "TENANT_CLASS";
+    }
+
+    @Override
+    public void init(java.util.Properties props) {
+        // Initialization logic nếu cần
+    }
+
+    @Override
+    public java.util.Properties getProps() {
+        return new java.util.Properties();
+    }
 }

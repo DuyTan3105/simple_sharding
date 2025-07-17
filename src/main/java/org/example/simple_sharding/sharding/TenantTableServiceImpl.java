@@ -1,6 +1,5 @@
 package org.example.simple_sharding.sharding;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.simple_sharding.sharding.dto.OrderShardingDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class TenantTableServiceImpl implements TenantTableService {
+
     @Autowired
     private StringRedisTemplate redis;
 
@@ -16,18 +16,20 @@ public class TenantTableServiceImpl implements TenantTableService {
     private ObjectMapper objectMapper;
 
     @Override
-    public String getTableName(String tenantId, String logicTable) {
+    public String getTableName(Long tenantId, String logicTable) {
         String key = "sharding::t:{" + tenantId + "}:" + tenantId;
         String field = tenantId + "-" + logicTable;
 
         Object val = redis.opsForHash().get(key, field);
-        if (val == null) throw new RuntimeException("Missing Redis entry");
+        if (val == null) {
+            return OrderShardingDTO.getDefaultTableName(tenantId, logicTable);
+        }
 
         try {
             OrderShardingDTO dto = objectMapper.readValue(val.toString(), OrderShardingDTO.class);
             return dto.getActualTableName();
         } catch (Exception e) {
-            throw new RuntimeException("JSON parse error", e);
+            throw new RuntimeException("JSON parse error for Redis value: " + val.toString(), e);
         }
     }
 }
