@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -25,16 +26,19 @@ public class ShardingConfig {
 
         // Tạo datasource cho sharding
         dataSourceMap.put("master_0", createDataSource("master_0", "localhost:5432/postgres"));
+        dataSourceMap.put("master_1", createDataSource("master_1", "localhost:5433/postgres"));
 
         // Sharding rules
         ShardingRuleConfiguration shardingRuleConfig = new ShardingRuleConfiguration();
 
-        // Orders table configuration - dynamic sharding dựa trên Redis
-        ShardingTableRuleConfiguration orderTableRule = new ShardingTableRuleConfiguration("orders", "master_0.orders_${0..3}");
+        ShardingTableRuleConfiguration orderTableRule = new ShardingTableRuleConfiguration(
+                "orders",
+                "master_0.orders_0,master_0.orders_1,master_1.orders_2,master_1.orders_3"
+        );
 
         // Table sharding strategy với tenant_id
         orderTableRule.setTableShardingStrategy(new StandardShardingStrategyConfiguration(
-                "tenant_id", "tenant_algo"));
+                "tenant_id", "tenant_db_algo"));
 
         shardingRuleConfig.getTables().add(orderTableRule);
 
@@ -42,13 +46,23 @@ public class ShardingConfig {
         Properties tenantProps = new Properties();
         tenantProps.setProperty("strategy", "standard");
         tenantProps.setProperty("algorithmClassName", "org.example.simple_sharding.sharding.TenantSharding");
-        shardingRuleConfig.getShardingAlgorithms().put("tenant_algo",
+        shardingRuleConfig.getShardingAlgorithms().put("tenant_db_algo",
                 new AlgorithmConfiguration("TENANT_CLASS", tenantProps));
 
         // Global properties
         Properties globalProps = new Properties();
         globalProps.setProperty("sql-show", "true");
         globalProps.setProperty("sql-simple", "false");
+
+        System.out.println("== DataSources check ==");
+        for (Map.Entry<String, DataSource> entry : dataSourceMap.entrySet()) {
+            System.out.println("Checking datasource: " + entry.getKey());
+            try (Connection conn = entry.getValue().getConnection()) {
+                System.out.println("  Connected: " + !conn.isClosed());
+            } catch (Exception e) {
+                System.out.println("  Error: " + e.getMessage());
+            }
+        }
 
         return ShardingSphereDataSourceFactory.createDataSource(dataSourceMap, Collections.singleton(shardingRuleConfig), globalProps);
     }
