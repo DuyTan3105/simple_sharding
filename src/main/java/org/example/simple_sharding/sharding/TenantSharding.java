@@ -1,5 +1,6 @@
 package org.example.simple_sharding.sharding;
 
+import groovy.util.logging.Slf4j;
 import org.apache.shardingsphere.sharding.api.sharding.standard.*;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@Slf4j
 public class TenantSharding implements StandardShardingAlgorithm<Long>, ApplicationContextAware {
 
     private static ApplicationContext applicationContext;
@@ -45,8 +47,8 @@ public class TenantSharding implements StandardShardingAlgorithm<Long>, Applicat
                                     ", available tables: " + availableTargetNames));
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to determine sharding table for tenant_id: " + tenantId +
-                    ", logic table: " + logicTable, e);
+            System.out.println("Error in doSharding: " + e.getMessage());
+            return null; // Hoặc ném ra một ngoại lệ tùy ý
         }
     }
 
