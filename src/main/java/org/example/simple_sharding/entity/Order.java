@@ -29,15 +29,19 @@ public class Order {
     @Column(name = "status")
     private String status;
 
+    @Column(name = "country_code")
+    private String countryCode;
+
     // Constructors
     public Order() {}
 
-    public Order(Long tenantId, String orderNumber, String customerName, Double totalAmount, String status) {
+    public Order(Long tenantId, String orderNumber, String customerName, Double totalAmount, String status, String countryCode) {
         this.tenantId = tenantId;
         this.orderNumber = orderNumber;
         this.customerName = customerName;
         this.totalAmount = totalAmount;
         this.status = status;
+        this.countryCode = countryCode;
     }
 
     // Getters and Setters
@@ -87,6 +91,14 @@ public class Order {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getCountryCode() {
+        return countryCode;
+    }
+
+    public void setCountryCode(String countryCode) {
+        this.countryCode = countryCode;
     }
 
     @Override

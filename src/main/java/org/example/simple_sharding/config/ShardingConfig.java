@@ -36,18 +36,36 @@ public class ShardingConfig {
                 "master_0.orders_0,master_0.orders_1,master_1.orders_2,master_1.orders_3"
         );
 
+//        ShardingTableRuleConfiguration orderTableRule = new ShardingTableRuleConfiguration(
+//                "orders",
+//                "master_0.orders_0,master_0.orders_1,master_1.orders_2,master_1.orders_3"
+//        );
+
         // Table sharding strategy với tenant_id
+//        orderTableRule.setTableShardingStrategy(new StandardShardingStrategyConfiguration(
+//                "tenant_id", "tenant_db_algo"));
+
+        // Dùng chiến lược sharding theo country_code
         orderTableRule.setTableShardingStrategy(new StandardShardingStrategyConfiguration(
-                "tenant_id", "tenant_db_algo"));
+                "country_code", "country_algo"
+        ));
 
         shardingRuleConfig.getTables().add(orderTableRule);
 
         // Custom Redis-based sharding algorithm
-        Properties tenantProps = new Properties();
-        tenantProps.setProperty("strategy", "standard");
-        tenantProps.setProperty("algorithmClassName", "org.example.simple_sharding.sharding.TenantSharding");
-        shardingRuleConfig.getShardingAlgorithms().put("tenant_db_algo",
-                new AlgorithmConfiguration("TENANT_CLASS", tenantProps));
+//        Properties tenantProps = new Properties();
+//        tenantProps.setProperty("strategy", "standard");
+//        tenantProps.setProperty("algorithmClassName", "org.example.simple_sharding.sharding.TenantSharding");
+//        shardingRuleConfig.getShardingAlgorithms().put("tenant_db_algo",
+//                new AlgorithmConfiguration("TENANT_CLASS", tenantProps));
+
+
+        Properties countryProps = new Properties();
+        countryProps.setProperty("strategy", "standard");
+        countryProps.setProperty("algorithmClassName", "org.example.sharding.CountryShardingAlgorithm");
+
+        shardingRuleConfig.getShardingAlgorithms().put("country_algo",
+                new AlgorithmConfiguration("COUNTRY_CLASS", countryProps));
 
         // Global properties
         Properties globalProps = new Properties();

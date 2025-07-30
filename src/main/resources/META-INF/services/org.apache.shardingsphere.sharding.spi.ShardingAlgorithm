@@ -1,1 +1,2 @@
 org.example.simple_sharding.sharding.TenantSharding
+org.example.simple_sharding.sharding.CountryShardingAlgorithm

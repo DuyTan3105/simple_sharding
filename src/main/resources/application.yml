@@ -1,22 +1,7 @@
 spring:
-  # Datasource cho non-sharding operations
-#  datasource:
-#    driver-class-name: org.postgresql.Driver
-#    url: jdbc:postgresql://localhost:5432/postgres
-#    username: postgres
-#    password: 12345678
-#    hikari:
-#      maximum-pool-size: 10
-#      minimum-idle: 5
-#      connection-timeout: 30000
-#      idle-timeout: 600000
-#      max-lifetime: 1800000
-
-  # Jackson config
   jackson:
     default-property-inclusion: non_null
 
-  # Redis config
   data:
     redis:
       host: localhost
@@ -28,12 +13,10 @@ spring:
           max-idle: 8
           min-idle: 0
 
-  # Exclude ShardingSphere auto configuration vì chúng ta dùng manual config
   autoconfigure:
     exclude:
       - org.apache.shardingsphere.spring.boot.ShardingSphereAutoConfiguration
 
-# Logging
 logging:
   level:
     root: INFO
@@ -42,9 +25,9 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
-# Custom properties cho sharding (nếu cần)
 sharding:
   tenant:
     default-size: 4
     algorithm-class: com.example.sharding.sharding.TenantSharding
-
+  country:
+    algorithm-class: com.example.sharding.sharding.CountrySharding
