@@ -29,9 +29,9 @@ public class SimpleShardingApplication implements CommandLineRunner {
 //		controller.create(order1);
 //		Order order2 = new Order(2L, "order_1003", "Nguyen Van C", 400000.0, "CREATED");
 //		controller.create(order2);
-		Order order3 = new Order(3L, "order_1004", "Nguyen Van D", 500000.0, "CREATED");
+		Order order3 = new Order(3L, "order_1004", "Nguyen Van D", 500000.0, "CREATED", "VN");
 		controller.create(order3);
-		Order order4 = new Order(4L, "order_1005", "Nguyen Van E", 600000.0, "CREATED");
+		Order order4 = new Order(4L, "order_1005", "Nguyen Van E", 600000.0, "CREATED", "JP");
 		controller.create(order4);
 	}
 }
